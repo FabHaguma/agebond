@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_GEMINI_API_KEY: ${VITE_GEMINI_API_KEY}
+    container_name: agebond-frontend
+    restart: unless-stopped
+    networks:
+      - caddy_network
+
+networks:
+  caddy_network:
+    external: true
