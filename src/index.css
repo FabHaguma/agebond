@@ -1,0 +1,71 @@
+:root {
+  --font-primary: 'Inter', sans-serif;
+  
+  --color-primary: #6D28D9; /* Deep Purple */
+  --color-primary-light: #EDE9FE;
+  --color-primary-dark: #4C1D95;
+  --color-secondary: #F3F4F6; /* Light Gray BG */
+  --color-text: #1F2937; /* Dark Gray Text */
+  --color-text-light: #6B7280;
+  --color-border: #E5E7EB;
+  --color-white: #FFFFFF;
+  --color-accent: #F59E0B; /* Yellow for "Ask AI" */
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+  --border-radius: 8px;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-primary);
+  background-color: var(--color-secondary);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.logo-icon {
+  width: 48px;
+  height: 48px;
+}
+
+.logo-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--color-primary-dark);
+}
+
+.logo-subtitle {
+  font-size: 0.875rem;
+  margin: 0;
+  color: var(--color-text-light);
+}
+
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 2rem;
+}
+
+@media (max-width: 900px) {
+  .main-grid {
+    grid-template-columns: 1fr;
+  }
+}
