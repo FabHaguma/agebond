@@ -3,7 +3,6 @@ import { useFamilyStore, RELATIONSHIP_TYPES, GENDER_OPTIONS } from '../../store/
 import { Card } from '../../components/Card/Card';
 import { Input } from '../../components/Input/Input';
 import { Button } from '../../components/Button/Button';
-import { PlusIcon } from '../../components/PlusIcon/PlusIcon';
 import styles from './FamilyPanel.module.css';
 import { format, parseISO } from 'date-fns';
 
@@ -37,9 +36,10 @@ export const FamilyPanel = () => {
   const [dob, setDob] = useState('');
   const [relationship, setRelationship] = useState('other');
   const [gender, setGender] = useState('Male');
-  const [addingEventFor, setAddingEventFor] = useState(null);
-  const [newEventTitle, setNewEventTitle] = useState('');
-  const [newEventDate, setNewEventDate] = useState('');
+  const [isAddEventExpanded, setIsAddEventExpanded] = useState(false);
+  const [addEventPersonId, setAddEventPersonId] = useState('');
+  const [addEventTitle, setAddEventTitle] = useState('');
+  const [addEventDate, setAddEventDate] = useState('');
   const [editingRelationship, setEditingRelationship] = useState(null);
   const [editingGender, setEditingGender] = useState(null);
   const [error, setError] = useState('');
@@ -97,13 +97,14 @@ export const FamilyPanel = () => {
     }
   };
 
-  const handleAddEvent = (e) => {
+  const handleAddEventFromPanel = (e) => {
     e.preventDefault();
-    if (newEventTitle.trim() && newEventDate && addingEventFor) {
-      addEvent(addingEventFor, newEventTitle, newEventDate);
-      setNewEventTitle('');
-      setNewEventDate('');
-      setAddingEventFor(null);
+    if (addEventTitle.trim() && addEventDate && addEventPersonId) {
+      addEvent(addEventPersonId, addEventTitle, addEventDate);
+      setAddEventTitle('');
+      setAddEventDate('');
+      setAddEventPersonId('');
+      setIsAddEventExpanded(false);
     }
   };
 
@@ -187,6 +188,57 @@ export const FamilyPanel = () => {
           </form>
         )}
       </div>
+
+      {family.length > 0 && (
+        <div className={styles.addSection}>
+          <button
+            className={styles.addSectionHeader}
+            onClick={() => setIsAddEventExpanded(!isAddEventExpanded)}
+            type="button"
+          >
+            <h3 className={styles.subtitle}>Add an Event</h3>
+            <ChevronIcon isExpanded={isAddEventExpanded} />
+          </button>
+
+          {isAddEventExpanded && (
+            <form onSubmit={handleAddEventFromPanel} className={styles.addForm}>
+              <div className={styles.inputGroup}>
+                <label htmlFor="event-person" className={styles.label}>Family Member</label>
+                <select
+                  id="event-person"
+                  value={addEventPersonId}
+                  onChange={(e) => setAddEventPersonId(e.target.value)}
+                  className={styles.select}
+                  required
+                >
+                  <option value="">Select a person...</option>
+                  {family.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+              <Input
+                label="Event Title"
+                id="panel-event-title"
+                type="text"
+                value={addEventTitle}
+                onChange={(e) => setAddEventTitle(e.target.value)}
+                placeholder="e.g., Graduation"
+                required
+              />
+              <Input
+                label="Event Date"
+                id="panel-event-date"
+                type="date"
+                value={addEventDate}
+                onChange={(e) => setAddEventDate(e.target.value)}
+                required
+              />
+              <Button type="submit">Save Event</Button>
+            </form>
+          )}
+        </div>
+      )}
 
       {family.length === 0 && (
         <div className={styles.emptyState}>
@@ -332,48 +384,7 @@ export const FamilyPanel = () => {
                     </div>
                   )}
                   
-                  {addingEventFor === member.id ? (
-                    <form onSubmit={handleAddEvent} className={styles.addEventForm}>
-                      <Input
-                        label="Event Title"
-                        id={`event-title-${member.id}`}
-                        type="text"
-                        value={newEventTitle}
-                        onChange={(e) => setNewEventTitle(e.target.value)}
-                        placeholder="e.g., Graduation"
-                        required
-                      />
-                      <Input
-                        label="Event Date"
-                        id={`event-date-${member.id}`}
-                        type="date"
-                        value={newEventDate}
-                        onChange={(e) => setNewEventDate(e.target.value)}
-                        required
-                      />
-                      <div className={styles.eventButtonGroup}>
-                        <Button type="submit">Save Event</Button>
-                        <Button 
-                          type="button" 
-                          onClick={() => {
-                            setAddingEventFor(null);
-                            setNewEventTitle('');
-                            setNewEventDate('');
-                          }}
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    </form>
-                  ) : (
-                    <button 
-                      onClick={() => setAddingEventFor(member.id)} 
-                      className={styles.addEventButton}
-                    >
-                      <PlusIcon />
-                      <span>Add Event</span>
-                    </button>
-                  )}
+
                 </div>
               )}
             </div>

@@ -85,3 +85,10 @@
   margin: 0;
   font-weight: 500;
 }
+.welcomeIcons {
+  width: 2.5rem;
+  height: 2.5rem;
+  padding-left: 0.1rem;
+  object-fit: contain;
+  vertical-align: middle;
+}

@@ -64,9 +64,9 @@ function createFamilyContext(people) {
 }
 
 /**
- * Handle open-ended AI queries about family ages
+ * Handle Gemini queries about family ages
  */
-export async function handleOpenAIQuery(naturalQuery, people) {
+export async function handleGeminiQuery(naturalQuery, people) {
   if (!API_KEY) {
     throw new Error("Gemini API key is not configured. The AI feature is disabled.");
   }
@@ -104,7 +104,7 @@ CALCULATION HELPERS:
 
   const familyDataPrompt = `
 ## Family Information
-Main Person: ${familyContext.mainPerson.name} (you) - Age ${familyContext.mainPerson.currentAge}, Born ${format(parseISO(familyContext.mainPerson.dob), 'MMMM d, yyyy')}
+Main Person: ${familyContext.mainPerson.name} (you) - Age ${familyContext.mainPerson.currentAge}, Born ${format(parseISO(familyContext.mainPerson.dob), 'MMMM d, yyyy')}${familyContext.mainPerson.events.length > 0 ? `\n  Events: ${familyContext.mainPerson.events.map(e => `${e.title} on ${format(parseISO(e.date), 'MMMM d, yyyy')} (age ${e.ageAtEvent})`).join(', ')}` : ''}
 
 Family Members:
 ${familyContext.family.filter(p => p.relationship !== 'self').map(person => 
@@ -121,7 +121,7 @@ Answer the user's question naturally and conversationally. Provide specific calc
 
   try {
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-2.0-flash",
+      model: "gemini-flash-latest",
       systemInstruction: systemInstruction,
     });
 
@@ -135,7 +135,7 @@ Answer the user's question naturally and conversationally. Provide specific calc
 }
 
 /**
- * Determine if a query should use templates or open AI
+ * Determine if a query should use templates or Gemini
  */
 export function shouldUseTemplateBasedResponse(naturalQuery) {
   const query = naturalQuery.toLowerCase();
@@ -173,18 +173,18 @@ export function shouldUseTemplateBasedResponse(naturalQuery) {
   }
   
   // Additional check: simple "when I am X how old will Y be" should NOT use templates
-  // This type of question is better handled by open AI
+  // This type of question is better handled by Gemini
   const simpleAgePattern = /when (i am|i'm).*how old will.*be/i;
   if (simpleAgePattern.test(query)) {
     return false;
   }
   
-  // Fall back to open AI for most other queries
+  // Fall back to Gemini for most other queries
   return false;
 }
 
 /**
- * Enhanced AI query handler that tries templates first, then falls back to open AI
+ * Enhanced AI query handler that tries templates first, then falls back to Gemini
  */
 export async function handleEnhancedAIQuery(naturalQuery, people, events, templates, parseNaturalLanguageQuery) {
   const shouldTryTemplate = shouldUseTemplateBasedResponse(naturalQuery);
@@ -214,15 +214,15 @@ export async function handleEnhancedAIQuery(naturalQuery, people, events, templa
         }
       }
     } catch (templateError) {
-      console.log("Template approach failed, falling back to open AI:", templateError.message);
+      console.log("Template approach failed, falling back to Gemini:", templateError.message);
     }
   }
   
-  // Fall back to open AI approach
+  // Fall back to Gemini
   try {
-    const openAIResult = await handleOpenAIQuery(naturalQuery, people);
-    return { type: 'open', result: openAIResult };
-  } catch (openAIError) {
-    throw new Error(openAIError.message || 'I had trouble understanding your question. Please try rephrasing it.');
+    const geminiResult = await handleGeminiQuery(naturalQuery, people);
+    return { type: 'gemini', result: geminiResult };
+  } catch (geminiError) {
+    throw new Error(geminiError.message || 'I had trouble understanding your question. Please try rephrasing it.');
   }
 }

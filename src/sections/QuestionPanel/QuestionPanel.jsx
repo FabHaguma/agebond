@@ -1,11 +1,12 @@
 import { useState, useMemo } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { Card } from '../../components/Card/Card';
 import { Button } from '../../components/Button/Button';
-import { Input } from '../../components/Input/Input';
 import { useFamilyStore } from '../../store/familyStore';
 import { QUERY_TEMPLATES } from '../../utils/queryTemplates';
 import { parseNaturalLanguageQuery } from '../../utils/api';
 import { handleEnhancedAIQuery } from '../../utils/aiQueryHandler';
+import AgebondAIIcon from '../../assets/AgebondAI.png';
 import styles from './QuestionPanel.module.css';
 
 export const QuestionPanel = () => {
@@ -18,6 +19,7 @@ export const QuestionPanel = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [answer, setAnswer] = useState('');
   const [error, setError] = useState('');
+  const [hasAskedOnce, setHasAskedOnce] = useState(false);
 
   const isAIEnabled = !!import.meta.env.VITE_GEMINI_API_KEY;
 
@@ -97,6 +99,7 @@ export const QuestionPanel = () => {
       );
 
       setAnswer(result.result);
+      setHasAskedOnce(true);
     } catch (e) {
       console.error(e);
       setError(e.message || 'An error occurred while processing your question.');
@@ -126,7 +129,7 @@ export const QuestionPanel = () => {
             disabled={!isAIEnabled}
             title={!isAIEnabled ? "AI features require a Gemini API key" : ""}
           >
-            Ask AI ✨ {!isAIEnabled && '(Disabled)'}
+            Ask<img src={AgebondAIIcon} alt="Agebond AI" className={styles.aiTabIcon} /> {!isAIEnabled && '(Disabled)'}
           </button>
         </div>
 
@@ -191,36 +194,47 @@ export const QuestionPanel = () => {
                 </div>
               ) : (
                 <>
-                  <Input
-                    label="Ask your question in natural language"
-                    placeholder="e.g., How old will my mom be when I turn 40? or Who's the youngest in my family?"
-                    value={naturalQuery}
-                    onChange={(e) => setNaturalQuery(e.target.value)}
-                    id="naturalQuery"
-                  />
-                  
-                  <div className={styles.aiHelpText}>
-                    <p>Ask any age-related question about your family:</p>
-                    <ul>
-                      <li>"When will I be 30 years old?"</li>
-                      <li>"How old was Dad when Mom had my sister?"</li>
-                      <li>"What's the age difference between me and my brother?"</li>
-                      <li>"When will my sister be the age I am now?"</li>
-                      <li>"How old will my mom be in 5 years?"</li>
-                      <li>"When will my and my sister's combined age equal mom's age?"</li>
-                      <li>"Who is the oldest person in my family?"</li>
-                      <li>"What will everyone's ages be next Christmas?"</li>
-                    </ul>
-                    <p className={styles.aiNote}>
-                      💡 The AI can answer both specific calculations and general age questions!
-                    </p>
+                  <div>
+                    <label htmlFor="naturalQuery" className={styles.label}>Ask your question in natural language</label>
+                    <div className={styles.searchBar}>
+                      <input
+                        id="naturalQuery"
+                        className={styles.searchInput}
+                        placeholder="e.g., How old will my mom be when I turn 40?"
+                        value={naturalQuery}
+                        onChange={(e) => setNaturalQuery(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && naturalQuery.trim() && !isLoading) handleAIQuery();
+                        }}
+                      />
+                      <button
+                        className={styles.searchButton}
+                        onClick={handleAIQuery}
+                        disabled={!naturalQuery.trim() || isLoading}
+                      >
+                        {isLoading ? '…' : <> Ask<img src={AgebondAIIcon} alt="Agebond AI" className={styles.aiButtonIcon} /> </>}
+                      </button>
+                    </div>
                   </div>
-                  
-                  <div className={styles.buttonWrapper}>
-                      <Button onClick={handleAIQuery} disabled={!naturalQuery.trim() || isLoading}>
-                          {isLoading ? 'Thinking...' : 'Ask AI ✨'}
-                      </Button>
-                  </div>
+
+                  {!hasAskedOnce && (
+                    <div className={styles.aiHelpText}>
+                      <p>Ask any age-related question about your family:</p>
+                      <ul>
+                        <li>"When will I be 30 years old?"</li>
+                        <li>"How old was Dad when Mom had my sister?"</li>
+                        <li>"What's the age difference between me and my brother?"</li>
+                        <li>"When will my sister be the age I am now?"</li>
+                        <li>"How old will my mom be in 5 years?"</li>
+                        <li>"When will my and my sister's combined age equal mom's age?"</li>
+                        <li>"Who is the oldest person in my family?"</li>
+                        <li>"What will everyone's ages be next Christmas?"</li>
+                      </ul>
+                      <p className={styles.aiNote}>
+                        💡 The AI can answer both specific calculations and general age questions!
+                      </p>
+                    </div>
+                  )}
                 </>
               )}
             </>
@@ -233,7 +247,7 @@ export const QuestionPanel = () => {
             <p className={styles.answerLabel}>The Answer:</p>
             {isLoading && <div className={styles.loader}></div>}
             {error && <p className={styles.errorText}>{error}</p>}
-            {answer && <p className={styles.answerText}>{answer}</p>}
+            {answer && <div className={styles.answerMarkdown}><ReactMarkdown>{answer}</ReactMarkdown></div>}
         </Card>
       )}
        {!answer && !isLoading && !error && (

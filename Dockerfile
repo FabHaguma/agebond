@@ -1,38 +1,35 @@
 # Multi-stage Dockerfile for Vite React frontend
 
-# Build Stage
+# Stage 1: Build the React application
 FROM node:18-alpine AS builder
 
-# Set working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json (if available)
+# Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install all dependencies (including devDependencies for the build)
+RUN npm ci
 
-# Copy source code
+# Copy the rest of the application source code
 COPY . .
 
-# Accept build argument for API key
+# Set the build-time argument for the API key
 ARG VITE_GEMINI_API_KEY
 ENV VITE_GEMINI_API_KEY=$VITE_GEMINI_API_KEY
 
 # Build the application
 RUN npm run build
 
-# Serve Stage
+# Stage 2: Serve the application with Nginx
 FROM nginx:alpine
 
-# Copy custom nginx configuration
-COPY nginx.conf /etc/nginx/nginx.conf
-
-# Copy built assets from builder stage
+# Copy the build output from the builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Expose port 80
-EXPOSE 80
+# Copy the custom Nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
 
-# Start nginx
+# Expose port 80 and start Nginx
+EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
